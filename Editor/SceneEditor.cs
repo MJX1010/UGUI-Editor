@@ -10,8 +10,11 @@ public class SceneEditor {
     [InitializeOnLoadMethod]
     static void Init()
     {
+#if UNITY_2019_4_OR_NEWER
+        SceneView.duringSceneGui += OnSceneGUI;
+#else
         SceneView.onSceneGUIDelegate += OnSceneGUI;
-
+#endif
         //选中Image节点并点击图片后即帮它赋上图片
         if (Configure.IsEnableFastSelectImage)
             Selection.selectionChanged += OnSelectChange;

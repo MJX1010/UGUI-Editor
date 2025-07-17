@@ -164,7 +164,12 @@ public class PrefabWin : EditorWindow
 
             if (string.IsNullOrEmpty(path)) return;
 
-            go = PrefabUtility.CreatePrefab(path, go);
+#if UNITY_2019_4_OR_NEWER
+            //TODO 未测试
+            go = PrefabUtility.SaveAsPrefabAsset(go, path);
+#else
+			go = PrefabUtility.CreatePrefab(path, go);
+#endif
             if (go == null) return;
 
             guid = U3DExtends.UIEditorHelper.ObjectToGUID(go);

@@ -627,7 +627,13 @@ namespace U3DExtends
             //Debug.Log("child type :" + PrefabUtility.GetPrefabType(child_obj));
 
             //判断选择的物体，是否为预设  
+#if UNITY_2019_4_OR_NEWER
+            //TODO 未测试
+            PrefabAssetType cur_prefab_type = PrefabUtility.GetPrefabAssetType(child_obj);
+            PrefabInstanceStatus cur_prefab_status = PrefabUtility.GetPrefabInstanceStatus(child_obj);
+#else
             PrefabType cur_prefab_type = PrefabUtility.GetPrefabType(child_obj);
+#endif
             //不是预设的话说明还没保存过的，弹出保存框
             string default_path = PathSaver.GetInstance().GetLastPath(PathType.SaveLayout);
             string save_path = EditorUtility.SaveFilePanel("Save Layout", default_path, "prefab_name", "prefab");
@@ -643,8 +649,14 @@ namespace U3DExtends
                 return;
             }
 
+#if UNITY_2019_4_OR_NEWER
+            //TODO 未测试
+            GameObject new_prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(child_obj, save_path, InteractionMode.UserAction);
+#else
             Object new_prefab = PrefabUtility.CreateEmptyPrefab(save_path);
             PrefabUtility.ReplacePrefab(child_obj, new_prefab, ReplacePrefabOptions.ConnectToPrefab);
+#endif
+
             LayoutInfo layoutInfo = layout.GetComponent<LayoutInfo>();
             if (layoutInfo != null)
                 layoutInfo.LayoutPath = full_path;
@@ -684,14 +696,24 @@ namespace U3DExtends
             {
                 GameObject child_obj = real_layout.gameObject;
                 //判断选择的物体，是否为预设  
+
+#if UNITY_2019_4_OR_NEWER
+                //TODO 未测试
+                PrefabAssetType cur_prefab_type = PrefabUtility.GetPrefabAssetType(child_obj);
+                PrefabInstanceStatus cur_prefab_status = PrefabUtility.GetPrefabInstanceStatus(child_obj);
+                if (cur_prefab_type == PrefabAssetType.Regular) {
+                    GameObject srcObj = PrefabUtility.GetCorrespondingObjectFromSource(child_obj);
+                    PrefabUtility.SaveAsPrefabAssetAndConnect(srcObj, AssetDatabase.GetAssetPath(saveObj), InteractionMode.UserAction);
+#else
                 PrefabType cur_prefab_type = PrefabUtility.GetPrefabType(child_obj);
                 if (PrefabUtility.GetPrefabType(child_obj) == PrefabType.PrefabInstance || cur_prefab_type == PrefabType.DisconnectedPrefabInstance)
                 {
                     UnityEngine.Object parentObject = PrefabUtility.GetPrefabParent(child_obj);
                     //替换预设,Note:只能用ConnectToPrefab,不然会重复加多几个同名控件的
                     PrefabUtility.ReplacePrefab(child_obj, parentObject, ReplacePrefabOptions.ConnectToPrefab);
-                    //刷新  
-                    AssetDatabase.Refresh();
+#endif
+                //刷新  
+                AssetDatabase.Refresh();
                     if (Configure.IsShowDialogWhenSaveLayout && !isQuiet)
                         EditorUtility.DisplayDialog("Tip", "Save Succeed!", "Ok");
 
@@ -725,14 +747,18 @@ namespace U3DExtends
         static public UnityEngine.Object GUIDToObject(string guid)
         {
             if (string.IsNullOrEmpty(guid)) return null;
-
-            if (s_GetInstanceIDFromGUID == null)
-                s_GetInstanceIDFromGUID = typeof(AssetDatabase).GetMethod("GetInstanceIDFromGUID", BindingFlags.Static | BindingFlags.NonPublic);
-
-            int id = (int)s_GetInstanceIDFromGUID.Invoke(null, new object[] { guid });
-            if (id != 0) return EditorUtility.InstanceIDToObject(id);
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (string.IsNullOrEmpty(path)) return null;
+
+            int id = 0;
+#if UNITY_2019_4_OR_NEWER
+#else
+            if (s_GetInstanceIDFromGUID == null) {
+                s_GetInstanceIDFromGUID = typeof(AssetDatabase).GetMethod("GetInstanceIDFromGUID", BindingFlags.Static | BindingFlags.NonPublic);
+                id = (int)s_GetInstanceIDFromGUID.Invoke(null, new object[] { guid });
+            }
+#endif
+            if (id != 0) return EditorUtility.InstanceIDToObject(id);
             return AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
         }
 

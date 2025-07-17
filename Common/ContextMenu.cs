@@ -49,7 +49,7 @@ static public class ContextMenu
         else AddDisabledItem(item);
     }
 
-        static public void Show()
+    static public void Show()
     {
         if (mMenu != null)
         {

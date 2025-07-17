@@ -33,6 +33,8 @@ namespace U3DExtends
                 spr_path = path;
                 _image.sprite = UIEditorHelper.LoadSpriteInLocal(path);
                 _image.SetNativeSize();
+                _image.color = new Color(Color.white.r, Color.white.g, Color.white.b, 0.5f);
+
                 gameObject.name = CommonHelper.GetFileNameByPath(path);
                 //Debug.Log("_image.sprite :" + (_image.sprite != null).ToString());
             }
